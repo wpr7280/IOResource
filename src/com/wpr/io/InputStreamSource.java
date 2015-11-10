@@ -21,5 +21,5 @@ public interface InputStreamSource {
 	 * @return 底层资源的InputStream （must not be {@code null}）
 	 * @throws IOException	if stream could not be opened
 	 */
-	InputStream getInputStrean() throws IOException;
+	InputStream getInputStream() throws IOException;
 }
