@@ -35,7 +35,7 @@ public class FileSystemResource extends AbstractResource implements
 	public final String getPath() {
 		return this.path;
 	}
-	
+
 	@Override
 	public boolean exists() {
 		return this.file.exists();
