@@ -3,8 +3,9 @@ package com.wpr.io;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 
 import com.wpr.utils.ResourceUtils;
 
@@ -16,33 +17,61 @@ import com.wpr.utils.ResourceUtils;
  */
 public abstract class AbstractFileResolvingResource extends AbstractResource{
 
-
 	@Override
 	public boolean exists() {
-		return super.exists();
+		try {
+			URL url = getURL();
+			if(ResourceUtils.isFileURL(url)){
+				//文件类型的比较好处理
+				return getFile().exists();
+			}else{
+				//测试URL连接
+				URLConnection conn = url.openConnection();
+				//TODO 这一步不是很懂，java.net包下的东西看的比较少。。。之后补回来
+				ResourceUtils.useCachesIfNecessary(conn);
+				HttpURLConnection httpConn =(conn instanceof HttpURLConnection?(HttpURLConnection)conn:null);
+				if(httpConn !=null){
+					httpConn.setRequestMethod("HEAD");
+					int code = httpConn.getResponseCode();
+					if(code ==HttpURLConnection.HTTP_OK){
+						return true;
+					}else if(code == HttpURLConnection.HTTP_NOT_FOUND){
+						return false;
+					}					
+				}
+				if(conn.getContentLength()>=0){
+					return true;
+				}
+				if(httpConn!=null){
+					//没有收到HTTP OK 或者NOT_FOUND的状态码，并且content-length==0
+					httpConn.disconnect();
+					return false;
+				}else{
+					//最后实在没办法了，测试是否可以打开stream
+					InputStream in = getInputStream();
+					in.close();
+					return true;
+				}
+			}
+		} catch (IOException e) {
+			//打不开stream或者有其他的IOException的时候触发
+			return false;
+		}
 	}
 
 	@Override
 	public boolean isReadable() {
-		// TODO Auto-generated method stub
-		return super.isReadable();
-	}
-
-	@Override
-	public boolean isOpen() {
-		// TODO Auto-generated method stub
-		return super.isOpen();
-	}
-
-	@Override
-	public URL getURL() throws IOException {
-		// TODO Auto-generated method stub
-		return super.getURL();
-	}
-
-	@Override
-	public URI getURI() throws IOException {
-		return super.getURI();
+		try {
+			URL url = this.getURL();
+			if(ResourceUtils.isFileURL(url)){
+				File file = this.getFile();
+				return (file.canRead()&&!file.isDirectory());
+			}else{
+				return true;
+			}
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 	@Override
@@ -50,36 +79,40 @@ public abstract class AbstractFileResolvingResource extends AbstractResource{
 		URL url = getURL();
 		return ResourceUtils.getFile(url,getDescription());
 	}
-
+	/**
+	 * <p>对于文件类型的，返回文件的长度；
+	 * <p>对于URL连接的，返回连接内容的长度
+	 * @return
+	 * @throws IOException URL格式不对，或者Http连接不可达
+	 */
 	@Override
 	public long contentLength() throws IOException {
-		// TODO Auto-generated method stub
-		return super.contentLength();
+		URL url = getURL();
+		if(ResourceUtils.isFileURL(url)){
+			return getFile().length();
+		}else{
+			URLConnection con = url.openConnection();
+			ResourceUtils.useCachesIfNecessary(con);
+			if (con instanceof HttpURLConnection) {
+				((HttpURLConnection) con).setRequestMethod("HEAD");
+			}
+			return con.getContentLength();
+		}
 	}
 
 	@Override
 	public long lastModified() throws IOException {
-		// TODO Auto-generated method stub
-		return super.lastModified();
+		URL url = getURL();
+		if(ResourceUtils.isFileURL(url)){
+			return super.lastModified();
+		}else{
+			URLConnection conn = url.openConnection();
+			ResourceUtils.useCachesIfNecessary(conn);
+			if(conn instanceof HttpURLConnection){
+				((HttpURLConnection)conn).setRequestMethod("HEAD");
+			}
+			return conn.getLastModified();
+		}
 	}
-
-	@Override
-	public Resource createRelative(String relativePath) throws IOException {
-		// TODO Auto-generated method stub
-		return super.createRelative(relativePath);
-	}
-
-	@Override
-	public String getFilename() {
-		// TODO Auto-generated method stub
-		return super.getFilename();
-	}
-
-	@Override
-	public String toString() {
-		// TODO Auto-generated method stub
-		return super.toString();
-	}
-
 
 }

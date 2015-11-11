@@ -111,11 +111,19 @@ public abstract class AbstractResource implements Resource{
 	}
 	@Override
 	public long lastModified() throws IOException {
-		long lastModified = getFile().lastModified();
+		long lastModified = getFileForLastModifiedCheck().lastModified();
 		if(lastModified==0L){
 			throw new FileNotFoundException(getDescription()+"cannot be resolved in file system");
 		}
 		return lastModified;
+	}
+	/**
+	 * 默认使用文件形式
+	 * @return
+	 * @throws IOException 
+	 */
+	protected File getFileForLastModifiedCheck() throws IOException {
+		return getFile();
 	}
 	/**
 	 * 假定相对资源不能被创建，直接抛出异常

@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * 用来解析文件的定位地址
@@ -46,18 +47,31 @@ public class ResourceUtils {
 	 * @return 
 	 * @throws FileNotFoundException 如果url不能被解析为一个File
 	 */
-	public static File getFile(URL url, String description) throws FileNotFoundException {
+	public static File getFile(URL url, String description) throws FileNotFoundException{
 		if(url==null){
 			throw new IllegalArgumentException("Resource URL must not be null");
 		}
 		if(!URL_PROTOCOL_FILE.equals(url.getProtocol())){
 			throw new FileNotFoundException(description+"cannot be resolved to file path");
 		}
-		//TODO
-		return null;
+		try {
+			return new File(toURI(url).getSchemeSpecificPart());
+		} catch (URISyntaxException e) {
+			return new File(url.getFile());
+		}
 	}
-	public static void main(String[] args) throws MalformedURLException {
-		URL url =new URL("file:\\D:\\Tomcat\\RUNNINT.txt");
-		System.out.println(url.toString());
+	/**
+	 * 判断是否是文件类型的URL
+	 * @param url
+	 * @return
+	 */
+	public static boolean isFileURL(URL url) {
+		if(URL_PROTOCOL_FILE.equals(url.getProtocol())){
+			return true;
+		}
+		return false;
+	}
+	public static void useCachesIfNecessary(URLConnection conn) {
+		conn.setUseCaches(conn.getClass().getSimpleName().startsWith("JNLP"));
 	}
 }
