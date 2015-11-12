@@ -1,9 +1,11 @@
 package com.wpr.io;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -27,7 +29,6 @@ public abstract class AbstractFileResolvingResource extends AbstractResource{
 			}else{
 				//测试URL连接
 				URLConnection conn = url.openConnection();
-				//TODO 这一步不是很懂，java.net包下的东西看的比较少。。。之后补回来
 				ResourceUtils.useCachesIfNecessary(conn);
 				HttpURLConnection httpConn =(conn instanceof HttpURLConnection?(HttpURLConnection)conn:null);
 				if(httpConn !=null){
@@ -113,6 +114,10 @@ public abstract class AbstractFileResolvingResource extends AbstractResource{
 			}
 			return conn.getLastModified();
 		}
+	}
+
+	protected File getFile(URI uri) throws FileNotFoundException {
+		return ResourceUtils.getFile(uri,getDescription());
 	}
 
 }

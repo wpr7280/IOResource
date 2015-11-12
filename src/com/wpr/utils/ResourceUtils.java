@@ -2,7 +2,6 @@ package com.wpr.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -61,6 +60,23 @@ public class ResourceUtils {
 		}
 	}
 	/**
+	 *将给定的URI解析成为 {@code java.io.File} 
+	 * @param uri                    带解析的URI
+	 * @param description	资源描述
+	 * @return
+	 * @throws FileNotFoundException 
+	 */
+	public static File getFile(URI uri, String description) throws FileNotFoundException {
+		if(uri==null){
+			throw new IllegalArgumentException("Resource URI must not be null");
+		}
+		if(!URL_PROTOCOL_FILE.equals(uri.getScheme())){
+			throw new FileNotFoundException(description+"cannot be resolved to absolute file path");
+		}
+		return new File(uri.getSchemeSpecificPart());
+	}
+	
+	/**
 	 * 判断是否是文件类型的URL
 	 * @param url
 	 * @return
@@ -74,4 +90,5 @@ public class ResourceUtils {
 	public static void useCachesIfNecessary(URLConnection conn) {
 		conn.setUseCaches(conn.getClass().getSimpleName().startsWith("JNLP"));
 	}
+
 }
